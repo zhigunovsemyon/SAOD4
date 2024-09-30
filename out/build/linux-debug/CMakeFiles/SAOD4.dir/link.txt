@@ -1,0 +1,1 @@
+/usr/sbin/clang -g CMakeFiles/SAOD4.dir/src/main.c.o -o SAOD4
