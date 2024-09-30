@@ -1,3 +1,0 @@
-/home/tuzgr/SAOD/SAOD4/out/build/linux-debug/CMakeFiles/SAOD4.dir
-/home/tuzgr/SAOD/SAOD4/out/build/linux-debug/CMakeFiles/edit_cache.dir
-/home/tuzgr/SAOD/SAOD4/out/build/linux-debug/CMakeFiles/rebuild_cache.dir
