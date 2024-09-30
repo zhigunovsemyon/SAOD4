@@ -1,29 +1,44 @@
-#include <stdio.h>  /*printf*/
-#include <stdlib.h> /*EXIT_SUCCESS*/
-#include <string.h> /*memcpy*/
 #include <stdbool.h> /*bool, true, false*/
+#include <stdio.h>   /*printf()*/
+#include <stdlib.h>  /*EXIT_SUCCESS, malloc(), free()*/
+#include <string.h>  /*memcpy()*/
 
+// Тип данных, используемый в алгоритме
 #define DATATYPE short
+// Строка для вывода одного элемента в printf()
+#define PRINT_STR "%d "
 
 // Однобайтовый тип данных
 #define byte char
 
 // Вывод массива int чисел Arr размера len через пробел с переносом в конце
 void PrintArray(DATATYPE const *const Arr, size_t const len) {
-    for (int i = 0; i < len; i++) {
-        printf("%d ", Arr[i]);
-    }
+    for (size_t i = 0; i < len; i++)
+        printf(PRINT_STR, Arr[i]);
+
     putchar('\n');
 }
 
-bool My_quicksort(void *const source, size_t const len, size_t const sizeofel,
-                  int (*compar)(const void *, const void *)) {
-    if (len <= 1)
+/*  Алгоритм быстрой сортировки.В процессе рекурсивно выделяет память в куче.
+    По неудаче с выделениением памяти возвращает true, при штатной работе --
+   false. */
+bool My_quicksort(
+    void *const source, // Область память, которую надо сортировать
+    size_t const element_count, // Число элементов
+    size_t const element_size,  // Размер одного элемента
+    int (*compar)(const void *, const void *) // Функция сравнения
+) {
+    // Пограничное условие рекурсивных вызовов.
+    if (element_count <= 1)
         return false;
 
-    byte *arr1 = (byte *)malloc(len * sizeofel); // Левое плечо массива
-    byte *arr2 = (byte *)malloc(len * sizeofel); // Правое плечо массива
-    byte *pivot = (byte *)malloc(sizeofel); // Ключ сортировки
+    // Левое плечо массива
+    byte *arr1 = (byte *)malloc(element_count * element_size);
+
+    // Правое плечо массива
+    byte *arr2 = (byte *)malloc(element_count * element_size);
+    // Ключ сортировки
+    byte *pivot = (byte *)malloc(element_size);
 
     /* Проверка выделения памяти.Если хоть один раз выделить память не
         удалось, сортировщик завершает работу */
@@ -34,85 +49,99 @@ bool My_quicksort(void *const source, size_t const len, size_t const sizeofel,
         return true;
     }
 
-    size_t  sizeof1arr = 0, // Длина левого плеча
-            sizeof2arr = 0; // Длина правого плеча
-            
-    //Копирование информации в ключ сортировки
-    memcpy(pivot, source, sizeofel);
+    size_t sizeof1arr = 0, // Длина левого плеча
+        sizeof2arr = 0;    // Длина правого плеча
 
-    for (size_t i = 1; i < len; i++) {
-        byte const *const cur = (byte *)source + i * sizeofel;
-        int comp_res = compar(pivot, cur);
-        if (comp_res > 0) {
-            memcpy(arr1 + sizeofel * sizeof1arr, 
-                cur, sizeofel);
+    // Копирование информации в ключ сортировки
+    memcpy(pivot, source, element_size);
+
+    /*Цикл, перебирающий исходный массив 
+    (кроме первого элемента, занесённого в пивот) */
+    for (size_t i = 1; i < element_count; i++) {
+        //Указатель на текущий элемент исходного массива
+        byte const *const cur = (byte *)source + i * element_size;
+
+        //Определение по функции сортировки нужного плеча
+        if (compar(pivot, cur) > 0) {
+            //Копирование в левое плечо, увеличение счётчика его размера
+            memcpy(arr1 + element_size * sizeof1arr, cur, element_size);
             sizeof1arr++;
         } else {
-            memcpy(arr2 + sizeofel * sizeof2arr, 
-                cur, sizeofel);
+            //Копирование в правое плечо, увеличение счётчика его размера
+            memcpy(arr2 + element_size * sizeof2arr, cur, element_size);
             sizeof2arr++;
         }
     }
 
-    memcpy(arr1 + sizeofel * sizeof1arr, pivot, sizeofel);
+    //Копирование ключа в край левого плеча, увеличение счётчика его размера
+    memcpy(arr1 + element_size * sizeof1arr, pivot, element_size);
     sizeof1arr++;
-
-    My_quicksort(arr1, sizeof1arr, sizeofel, compar);
-    My_quicksort(arr2, sizeof2arr, sizeofel, compar);
-
-    memcpy((byte *)source, arr1, sizeof1arr * sizeofel);
-    memcpy((byte *)source + (sizeof1arr * sizeofel), arr2,
-           sizeof2arr * sizeofel);
-
-
+    //Освобождение ключа за ненадобностью
     free(pivot);
+
+    /*Рекурсивный запуск сортировок в каждом плече. */
+    if (My_quicksort(arr1, sizeof1arr, element_size, compar) ||
+        My_quicksort(arr2, sizeof2arr, element_size, compar)) {
+        /*Если хоть одно из них завершилось ошибкой выделения памяти, 
+        вся память аварийно очищается, код ошибки возвращается выше*/
+        free(arr1);
+        free(arr2);
+        return true;
+    };
+
+    //Слияние двух отсортированных половин 
+    memcpy((byte *)source, arr1, sizeof1arr * element_size);
+    memcpy((byte *)source + (sizeof1arr * element_size), arr2,
+           sizeof2arr * element_size);
+    
+    /*Штатное освобождение памяти*/
     free(arr1);
     free(arr2);
     return false;
 }
 
-// Функция сортировки int чисел по возрастанию
+// Функция сортировки int чисел по убыванию
 int DescIntSort(const void *const a, const void *const b) {
+    //Локальные копии объектов
     const DATATYPE x = *(DATATYPE *)a, y = *(DATATYPE *)b;
+    /*  Если первое число больше второго, возврат -1,
+        Если второе число больше первого, возврат +1
+        Если два числа равны, оба неравенства ложны => 0 - 0 == 0*/
     return (x < y) - (x > y);
 }
 
 // Функция сортировки int чисел по возрастанию
 int AscIntSort(const void *const a, const void *const b) {
+    //Локальные копии объектов
     const DATATYPE x = *(DATATYPE *)a, y = *(DATATYPE *)b;
+    /*  Если первое число больше второго, возврат +1,
+        Если второе число больше первого, возврат -1
+        Если два числа равны, оба неравенства ложны => 0 - 0 == 0*/
     return (x > y) - (x < y);
-}
-
-// Заглушка для qsort
-int NoSort(const void *const a, const void *const b) {
-    (void)a, (void)b;
-    return 0;
 }
 
 int main(void) {
     DATATYPE const A[] = {
-        /**/10, 1, 3, -9, 11, -8, 0, 1,
-        1 + 3, 4, 89, 122, 0, -88, -2, 23, 10, -3, 1,
-        1 + 10, 1, 3, -9, 11, -8, 0, 1, 3, 4, 89,
-        21 + 10, 1, 3, -9, 11, -8, 0, 1, 3, 4, 89, 122, 0, 
-        21 + -88, -2, 23, 10, -3, 1,
-        13 + 10, 1, 3, -9, 11, -8, 0, 1, 3, 4, 89, -9, 11, -8, 0, 
-        -1, 3, 4, 89, 122, 0, -88, -2, 
-        -1 + 23, 10, -3, 
-        -1 + 1};
+         10, 1,   3,       -9,       11, -8,    0,  1,  1 + 3, 4,
+        89,      122, 0,       -88,      -2, 23,    10, -3, 1,     1 + 10,
+        1,       3,   -9,      11,       -8, 0,     1,  3,  4,     89,
+        21 + 10, 1,   3,       -9,       11, -8,    0,  1,  3,     4,
+        89,      122, 0,       21 + -88, -2, 23,    10, -3, 1,     13 + 10,
+        1,       3,   -9,      11,       -8, 0,     1,  3,  4,     89,
+        -9,      11,  -8,      0,        -1, 3,     4,  89, 122,   0,
+        -88,     -2,  -1 + 23, 10,       -3, -1 + 1};
     // Размер массива
     size_t const A_len = sizeof(A) / sizeof(DATATYPE);
 
     printf("Массив до изменения:\t");
     PrintArray(A, A_len);
 
-    // qsort((void *)A, A_len, sizeof(int), AscIntSort);
     My_quicksort((void *)A, A_len, sizeof(DATATYPE), AscIntSort);
-    printf("Массив после изменения:\t");
+    printf("Массив после сорт-ки по возрастанию: ");
     PrintArray(A, A_len);
-    
+
     My_quicksort((void *)A, A_len, sizeof(DATATYPE), DescIntSort);
-    printf("Массив после изменения:\t");
+    printf("Массив после сорт-ки по убыванию   : ");
     PrintArray(A, A_len);
 
     return EXIT_SUCCESS;
