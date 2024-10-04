@@ -25,7 +25,7 @@ bool My_quicksort(
     void *const source, // Область памяти, которую надо сортировать
     size_t const element_count, // Число элементов
     size_t const element_size,  // Размер одного элемента
-    int (*compar)(const void *, const void *) // Функция сравнения
+    int (*compar)(const void *const, const void *const) // Функция сравнения
 ) {
     // Пограничное условие рекурсивных вызовов.
     if (element_count <= 1)
