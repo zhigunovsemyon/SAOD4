@@ -37,19 +37,21 @@ void My_qsort2(void *const source, // Область памяти, котору�
                int (*compar)(const void *const,
                              const void *const) // Функция сравнения
 ) {
-    // Пограниченое условие
+    // Пограничное условие
     if (element_count < 2)
         return;
 
     // Указатель на ключевой элемент массива
     byte *pivot_ptr = (byte *)source + (element_count - 1) * element_size;
+    // Указатель на текущий элемент массива
+    byte *cur = (byte *)source;
 
     // Индекс текущего элемента
     size_t i = 0;
-    // Цикл перебирает каждый элемент массива
-    while (i < element_count) {
+    // Цикл перебирает каждый элемент массива до ключевого
+    do {
         // Указатель на текущий элемент массива
-        byte *const cur = (byte *)source + i * element_size;
+        cur = (byte *)source + i * element_size;
         /*Если функция сортировки вернула признак переноса
         (выбрана сорт-ка по возр., cur был больше pivot_ptr), то:*/
         if (compar(cur, pivot_ptr) > 0) {
@@ -68,11 +70,10 @@ void My_qsort2(void *const source, // Область памяти, котору�
             ++i;
         }
 
-        /*Если указатель на текущий элемент оказался в области правого плеча,
-         * сравнивать с ключём нет смысла */
-        if (pivot_ptr <= cur)
-            break;
-    }
+    /*Если указатель на текущий элемент оказался в области правого плеча,
+     * сравнивать с ключём нет смысла */
+    } while (pivot_ptr > cur);
+
     // Размер левого плеча
     size_t const leftlen = (size_t)(pivot_ptr - (byte *)source) / element_size;
     assert(!(leftlen > element_count));
@@ -200,19 +201,14 @@ int main(void) {
     printf("Массив до изменения:\t");
     PrintArray(A, A_len);
 
-    My_qsort2((void *)A, A_len, sizeof(DATATYPE), AscIntSort);
-    // if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), AscIntSort)) {
-    //     perror("My_qsort1");
-    //     return EXIT_FAILURE;
-    // };
+    if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), AscIntSort)) {
+        perror("My_qsort1");
+        return EXIT_FAILURE;
+    };
     printf("Массив после сорт-ки по возрастанию: ");
     PrintArray(A, A_len);
 
     My_qsort2((void *)A, A_len, sizeof(DATATYPE), DescIntSort);
-    // if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), DescIntSort)) {
-    //     perror("My_qsort1");
-    //     return EXIT_FAILURE;
-    // };
     printf("Массив после сорт-ки по убыванию   : ");
     PrintArray(A, A_len);
 
