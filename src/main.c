@@ -21,7 +21,7 @@ void PrintArray(DATATYPE const *const Arr, size_t const len) {
 /*  Алгоритм быстрой сортировки.В процессе рекурсивно выделяет память в куче.
     По неудаче с выделениением памяти возвращает true, при штатной работе --
    false. */
-bool My_quicksort(
+bool My_qsort1(
     void *const source, // Область памяти, которую надо сортировать
     size_t const element_count, // Число элементов
     size_t const element_size,  // Размер одного элемента
@@ -79,8 +79,8 @@ bool My_quicksort(
     free(pivot);
 
     /*Рекурсивный запуск сортировок в каждом плече. */
-    if (My_quicksort(arr1, sizeof1arr, element_size, compar) ||
-        My_quicksort(arr2, sizeof2arr, element_size, compar)) {
+    if (My_qsort1(arr1, sizeof1arr, element_size, compar) ||
+        My_qsort1(arr2, sizeof2arr, element_size, compar)) {
         /*Если хоть одно из них завершилось ошибкой выделения памяти,
         вся память аварийно очищается, код ошибки возвращается выше*/
         free(arr1);
@@ -134,15 +134,15 @@ int main(void) {
     printf("Массив до изменения:\t");
     PrintArray(A, A_len);
 
-    if (My_quicksort((void *)A, A_len, sizeof(DATATYPE), AscIntSort)) {
-        perror("My_quicksort");
+    if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), AscIntSort)) {
+        perror("My_qsort1");
         return EXIT_FAILURE;
     };
     printf("Массив после сорт-ки по возрастанию: ");
     PrintArray(A, A_len);
 
-    if (My_quicksort((void *)A, A_len, sizeof(DATATYPE), DescIntSort)) {
-        perror("My_quicksort");
+    if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), DescIntSort)) {
+        perror("My_qsort1");
         return EXIT_FAILURE;
     };
     printf("Массив после сорт-ки по убыванию   : ");
