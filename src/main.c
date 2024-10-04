@@ -1,8 +1,9 @@
+#include <assert.h>
 #include <stdbool.h> /*bool, true, false*/
 #include <stddef.h>
-#include <stdio.h>   /*printf()*/
-#include <stdlib.h>  /*EXIT_SUCCESS, malloc(), free()*/
-#include <string.h>  /*memcpy()*/
+#include <stdio.h>  /*printf()*/
+#include <stdlib.h> /*EXIT_SUCCESS, malloc(), free()*/
+#include <string.h> /*memcpy()*/
 
 // Тип данных, используемый в алгоритме
 #define DATATYPE short
@@ -21,35 +22,76 @@ void PrintArray(DATATYPE const *const Arr, size_t const len) {
 
 // Функция замены местами двух элементов размера element_size
 void GenSwap(void *const a, void *const b, size_t const element_size) {
-    for(size_t i = 0; i < element_size; ++i){
+    for (size_t i = 0; i < element_size; ++i) {
         byte const tmp = ((byte *)a)[i];
         ((byte *)a)[i] = ((byte *)b)[i];
         ((byte *)b)[i] = tmp;
     }
 }
 
-void My_qsort2(
-    void *const source, // Область памяти, которую надо сортировать
-    size_t const element_count, // Число элементов
-    size_t const element_size,  // Размер одного элемента
-    int (*compar)(const void *const, const void *const) // Функция сравнения
+/* Функция реализует сортировку алгоритмом quicksort. В процессе работы
+ * применяет рекурсию 2-го порядка */
+void My_qsort2(void *const source, // Область памяти, которую надо сортировать
+               size_t const element_count, // Число элементов
+               size_t const element_size,  // Размер одного элемента
+               int (*compar)(const void *const,
+                             const void *const) // Функция сравнения
 ) {
     // Пограниченое условие
     if (element_count < 2)
         return;
 
-    // Указатель на крайний элемент массива
-    byte *const pivot_ptr = (byte *)source + (element_count - 1) * element_size;
+    // Указатель на ключевой элемент массива
+    byte *pivot_ptr = (byte *)source + (element_count - 1) * element_size;
+
+    // Индекс текущего элемента
+    size_t i = 0;
+    // Цикл перебирает каждый элемент массива
+    while (i < element_count) {
+        // Указатель на текущий элемент массива
+        byte *const cur = (byte *)source + i * element_size;
+        /*Если функция сортировки вернула признак переноса
+        (выбрана сорт-ка по возр., cur был больше pivot_ptr), то:*/
+        if (compar(cur, pivot_ptr) > 0) {
+            // Ключевой и идущий перед ним элемент переставляются
+            GenSwap(pivot_ptr - element_size, pivot_ptr, element_size);
+            pivot_ptr -= element_size;
+            /*Если ключ и текущий элемент не были соседними, и, соответственно,
+             * уже поменянными на прошлом шагу, то текущий элемент, и элемент,
+             * оказавшийся по правое плечо от ключа, меняются местами*/
+            if (pivot_ptr != cur) {
+                GenSwap(cur, pivot_ptr + element_size, element_size);
+            }
+        } else {
+            /*Если функция сорт-ки не вернула признак перестановки,
+             * указатель на текущий элемент переставляется на следующий*/
+            ++i;
+        }
+
+        /*Если указатель на текущий элемент оказался в области правого плеча,
+         * сравнивать с ключём нет смысла */
+        if (pivot_ptr <= cur)
+            break;
+    }
+    // Размер левого плеча
+    size_t const leftlen = (size_t)(pivot_ptr - (byte *)source) / element_size;
+    assert(!(leftlen > element_count));
+    // Размер правого плеча
+    size_t const rightlen = element_count - leftlen - 1;
+
+    // Повторный запуск сортировок для каждого из плеч
+    My_qsort2(source, leftlen, element_size, compar);
+    My_qsort2(pivot_ptr + element_size, rightlen, element_size, compar);
 }
 
 /*  Алгоритм быстрой сортировки.В процессе рекурсивно выделяет память в куче.
     По неудаче с выделениением памяти возвращает true, при штатной работе --
    false. */
-bool My_qsort1(
-    void *const source, // Область памяти, которую надо сортировать
-    size_t const element_count, // Число элементов
-    size_t const element_size,  // Размер одного элемента
-    int (*compar)(const void *const, const void *const) // Функция сравнения
+bool My_qsort1(void *const source, // Область памяти, которую надо сортировать
+               size_t const element_count, // Число элементов
+               size_t const element_size,  // Размер одного элемента
+               int (*compar)(const void *const,
+                             const void *const) // Функция сравнения
 ) {
     // Пограничное условие рекурсивных вызовов.
     if (element_count <= 1)
@@ -158,17 +200,19 @@ int main(void) {
     printf("Массив до изменения:\t");
     PrintArray(A, A_len);
 
-    if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), AscIntSort)) {
-        perror("My_qsort1");
-        return EXIT_FAILURE;
-    };
+    My_qsort2((void *)A, A_len, sizeof(DATATYPE), AscIntSort);
+    // if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), AscIntSort)) {
+    //     perror("My_qsort1");
+    //     return EXIT_FAILURE;
+    // };
     printf("Массив после сорт-ки по возрастанию: ");
     PrintArray(A, A_len);
 
-    if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), DescIntSort)) {
-        perror("My_qsort1");
-        return EXIT_FAILURE;
-    };
+    My_qsort2((void *)A, A_len, sizeof(DATATYPE), DescIntSort);
+    // if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), DescIntSort)) {
+    //     perror("My_qsort1");
+    //     return EXIT_FAILURE;
+    // };
     printf("Массив после сорт-ки по убыванию   : ");
     PrintArray(A, A_len);
 
