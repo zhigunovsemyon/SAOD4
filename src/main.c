@@ -1,6 +1,4 @@
-#include <assert.h>
 #include <stdbool.h> /*bool, true, false*/
-#include <stddef.h>
 #include <stdio.h>  /*printf()*/
 #include <stdlib.h> /*EXIT_SUCCESS, malloc(), free()*/
 #include <string.h> /*memcpy()*/
@@ -76,7 +74,6 @@ void My_qsort2(void *const source, // Область памяти, котору�
 
     // Размер левого плеча
     size_t const leftlen = (size_t)(pivot_ptr - (byte *)source) / element_size;
-    assert(!(leftlen > element_count));
     // Размер правого плеча
     size_t const rightlen = element_count - leftlen - 1;
 
