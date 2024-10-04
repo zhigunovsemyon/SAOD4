@@ -1,4 +1,5 @@
 #include <stdbool.h> /*bool, true, false*/
+#include <stddef.h>
 #include <stdio.h>   /*printf()*/
 #include <stdlib.h>  /*EXIT_SUCCESS, malloc(), free()*/
 #include <string.h>  /*memcpy()*/
@@ -16,6 +17,29 @@ void PrintArray(DATATYPE const *const Arr, size_t const len) {
         printf(PRINT_STR, Arr[i]);
 
     putchar('\n');
+}
+
+// Функция замены местами двух элементов размера element_size
+void GenSwap(void *const a, void *const b, size_t const element_size) {
+    for(size_t i = 0; i < element_size; ++i){
+        byte const tmp = ((byte *)a)[i];
+        ((byte *)a)[i] = ((byte *)b)[i];
+        ((byte *)b)[i] = tmp;
+    }
+}
+
+void My_qsort2(
+    void *const source, // Область памяти, которую надо сортировать
+    size_t const element_count, // Число элементов
+    size_t const element_size,  // Размер одного элемента
+    int (*compar)(const void *const, const void *const) // Функция сравнения
+) {
+    // Пограниченое условие
+    if (element_count < 2)
+        return;
+
+    // Указатель на крайний элемент массива
+    byte *const pivot_ptr = (byte *)source + (element_count - 1) * element_size;
 }
 
 /*  Алгоритм быстрой сортировки.В процессе рекурсивно выделяет память в куче.
