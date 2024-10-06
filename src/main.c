@@ -1,12 +1,14 @@
 #include <stdbool.h> /*bool, true, false*/
+#include <stddef.h>
 #include <stdio.h>  /*printf()*/
-#include <stdlib.h> /*EXIT_SUCCESS, malloc(), free()*/
+#include <stdlib.h> /*EXIT_FAILURE, EXIT_SUCCESS, malloc(), free()*/
 #include <string.h> /*memcpy()*/
+#include <time.h> /*time()*/
 
 // Тип данных, используемый в алгоритме
-#define DATATYPE short
+#define DATATYPE long
 // Строка для вывода одного элемента в printf()
-#define PRINT_STR "%d "
+#define PRINT_STR "%ld "
 
 // Однобайтовый тип данных
 typedef unsigned char byte;
@@ -64,8 +66,8 @@ void My_qsort2(void *const source, // Область памяти, котору�
             cur += element_size;
         }
 
-    /*Если указатель на текущий элемент оказался в области правого плеча,
-     * сравнивать с ключём нет смысла */
+        /*Если указатель на текущий элемент оказался в области правого плеча,
+         * сравнивать с ключём нет смысла */
     } while (pivot_ptr > cur);
 
     // Размер левого плеча
@@ -159,6 +161,8 @@ bool My_qsort1(void *const source, // Область памяти, котору�
     return false;
 }
 
+size_t count = 0;
+
 // Функция сортировки int чисел по убыванию
 int DescIntSort(const void *const a, const void *const b) {
     // Локальные копии объектов
@@ -166,6 +170,7 @@ int DescIntSort(const void *const a, const void *const b) {
     /*  Если первое число больше второго, возврат -1,
         Если второе число больше первого, возврат +1
         Если два числа равны, оба неравенства ложны => 0 - 0 == 0*/
+    count++;
     return (x < y) - (x > y);
 }
 
@@ -176,34 +181,50 @@ int AscIntSort(const void *const a, const void *const b) {
     /*  Если первое число больше второго, возврат +1,
         Если второе число больше первого, возврат -1
         Если два числа равны, оба неравенства ложны => 0 - 0 == 0*/
+    count++;
     return (x > y) - (x < y);
 }
 
-int main(void) {
-    DATATYPE const A[] = {
-        10,  1,  3,   -9, 11,  -8,      0,       1,  1 + 3,   4,     89,
-        122, 0,  -88, -2, 23,  10,      -3,      1,  1 + 10,  1,     3,
-        -9,  11, -8,  0,  1,   3,       4,       89, 21 + 10, 1,     3,
-        -9,  11, -8,  0,  1,   3,       4,       89, 122,     0,     21 + -88,
-        -2,  23, 10,  -3, 1,   13 + 10, 1,       3,  -9,      11,    -8,
-        0,   1,  3,   4,  89,  -9,      11,      -8, 0,       -1,    3,
-        4,   89, 122, 0,  -88, -2,      -1 + 23, 10, -3,      -1 + 1};
+void FillWithRandom(void *const ptr, size_t memlen){
+    while(memlen--)
+        ((byte *)ptr)[memlen] = (byte)rand();
+}
+
+int main(int const argc, char const *const *const argv) {
+    size_t const A_len = (argc == 1) ? 2048lu : (size_t)atoi(argv[1]);
+    DATATYPE *A = (DATATYPE *)malloc(sizeof(DATATYPE) * A_len);
+    if (A == nullptr){
+        perror("malloc A");
+        return EXIT_FAILURE;
+    }
+    srand((unsigned int)time(NULL));
+    FillWithRandom(A, A_len * sizeof(DATATYPE));
+
     // Размер массива
-    size_t const A_len = sizeof(A) / sizeof(DATATYPE);
+    printf("Размер массива: %lu\n", A_len);
 
     printf("Массив до изменения:\t");
     PrintArray(A, A_len);
 
     if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), AscIntSort)) {
         perror("My_qsort1");
+        free(A);
         return EXIT_FAILURE;
     };
     printf("Массив после сорт-ки по возрастанию: ");
     PrintArray(A, A_len);
+    printf("Шагов для сортировки по возр. %lu\n", count);
+    count = 0;
 
-    My_qsort2((void *)A, A_len, sizeof(DATATYPE), DescIntSort);
-    printf("Массив после сорт-ки по убыванию   : ");
-    PrintArray(A, A_len);
+    if (My_qsort1((void *)A, A_len, sizeof(DATATYPE), DescIntSort)) {
+        perror("My_qsort1");
+        free(A);
+        return EXIT_FAILURE;
+    };
+    printf("Шагов для сортировки по убыв. %lu\n", count);
+    // printf("Массив после сорт-ки по убыванию   : ");
+    // PrintArray(A, A_len);
 
+    free(A);
     return EXIT_SUCCESS;
 }
