@@ -1,5 +1,4 @@
 #include <stdbool.h> /*bool, true, false*/
-#include <stddef.h>
 #include <stdio.h>  /*printf()*/
 #include <stdlib.h> /*EXIT_FAILURE, EXIT_SUCCESS, malloc(), free()*/
 #include <string.h> /*memcpy()*/
@@ -27,57 +26,6 @@ void GenSwap(void *const a, void *const b, size_t const element_size) {
         ((byte *)a)[i] = ((byte *)b)[i];
         ((byte *)b)[i] = tmp;
     }
-}
-
-/* Функция реализует сортировку алгоритмом quicksort. В процессе работы
- * применяет рекурсию 2-го порядка */
-void My_qsort2(void *const source, // Область памяти, которую надо сортировать
-               size_t const element_count, // Число элементов
-               size_t const element_size,  // Размер одного элемента
-               int (*compar)(const void *const,
-                             const void *const) // Функция сравнения
-) {
-    // Пограничное условие
-    if (element_count < 2)
-        return;
-
-    // Указатель на ключевой элемент массива
-    byte *pivot_ptr = (byte *)source + (element_count - 1) * element_size;
-    // Указатель на текущий элемент массива
-    byte *cur = (byte *)source;
-
-    // Цикл перебирает каждый элемент массива до ключевого
-    do {
-        /*Если функция сортировки вернула признак переноса
-        (выбрана сорт-ка по возр., cur был больше pivot_ptr), то:*/
-        if (compar(cur, pivot_ptr) > 0) {
-            // Ключевой и идущий перед ним элемент переставляются
-            GenSwap(pivot_ptr - element_size, pivot_ptr, element_size);
-            pivot_ptr -= element_size;
-            /*Если ключ и текущий элемент не были соседними, и, соответственно,
-             * уже поменянными на прошлом шагу, то текущий элемент, и элемент,
-             * оказавшийся по правое плечо от ключа, меняются местами*/
-            if (pivot_ptr != cur) {
-                GenSwap(cur, pivot_ptr + element_size, element_size);
-            }
-        } else {
-            /*Если функция сорт-ки не вернула признак перестановки,
-             * указатель на текущий элемент переставляется на следующий*/
-            cur += element_size;
-        }
-
-        /*Если указатель на текущий элемент оказался в области правого плеча,
-         * сравнивать с ключём нет смысла */
-    } while (pivot_ptr > cur);
-
-    // Размер левого плеча
-    size_t const leftlen = (size_t)(pivot_ptr - (byte *)source) / element_size;
-    // Размер правого плеча
-    size_t const rightlen = element_count - leftlen - 1;
-
-    // Повторный запуск сортировок для каждого из плеч
-    My_qsort2(source, leftlen, element_size, compar);
-    My_qsort2(pivot_ptr + element_size, rightlen, element_size, compar);
 }
 
 /*  Алгоритм быстрой сортировки.В процессе рекурсивно выделяет память в куче.
@@ -161,6 +109,7 @@ bool My_qsort1(void *const source, // Область памяти, котору�
     return false;
 }
 
+//Счётчик числа сравнений
 size_t count = 0;
 
 // Функция сортировки int чисел по убыванию
